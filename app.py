@@ -119,6 +119,13 @@ def sidebar_settings() -> tuple[Dict[str, object], Dict[str, object]]:
             ["侧面拍摄", "后方拍摄"],
             index=0,
         )
+        ball_start_region = st.selectbox(
+            "球起始搜索区域",
+            ["画面下半部（推荐）", "左下区域", "中下区域", "右下区域", "全画面"],
+            index=0,
+            help="如果轨迹跑到人身上，请改成球所在的左下、中下或右下区域。全画面最宽松，也最容易误跟踪。",
+        )
+        st.caption("提示：单目视频无法像雷达一样精确测距。请用参考物校准比例，估算结果只适合训练反馈。")
 
         st.markdown("---")
         st.markdown("## 轨迹设置")
@@ -148,6 +155,7 @@ def sidebar_settings() -> tuple[Dict[str, object], Dict[str, object]]:
         "reference_pixels": int(reference_pixels),
         "club_type": club_type,
         "camera_angle": camera_angle,
+        "ball_start_region": ball_start_region,
     }
     trail_settings = {
         "color_hex": trail_color,
@@ -254,6 +262,8 @@ def analyze_video_file(
         frame_width=metadata_obj.width,
         frame_height=metadata_obj.height,
         min_points=5,
+        camera_angle=str(analysis_settings["camera_angle"]),
+        start_region=str(analysis_settings["ball_start_region"]),
     )
 
     if len(raw_detections) < 5:

@@ -30,6 +30,19 @@ CLUB_DRAG_FACTOR = {
     "挖起杆": 0.46,
 }
 
+CLUB_CARRY_LIMIT_M = {
+    "Driver": 320.0,
+    "一号木": 320.0,
+    "Wood": 270.0,
+    "球道木": 270.0,
+    "Hybrid": 240.0,
+    "混合杆": 240.0,
+    "Iron": 210.0,
+    "铁杆": 210.0,
+    "Wedge": 140.0,
+    "挖起杆": 140.0,
+}
+
 
 def estimate_carry(
     speed_mps: Optional[float],
@@ -46,10 +59,12 @@ def estimate_carry(
 
     angle = max(3.0, min(45.0, float(angle)))
     radians = math.radians(angle)
-    ideal_range = (speed_mps * speed_mps * math.sin(2.0 * radians)) / 9.80665
+    capped_speed = min(float(speed_mps), 92.0)
+    ideal_range = (capped_speed * capped_speed * math.sin(2.0 * radians)) / 9.80665
     drag_factor = CLUB_DRAG_FACTOR.get(club_type, 0.56)
     if camera_angle in {"Rear View", "后方拍摄"}:
         drag_factor *= 0.82
 
     carry = ideal_range * drag_factor
+    carry = min(carry, CLUB_CARRY_LIMIT_M.get(club_type, 260.0))
     return round(max(0.0, carry), 1)

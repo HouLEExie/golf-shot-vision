@@ -49,11 +49,36 @@ def _link_score(track: _Track, detection: Detection, max_distance: float) -> Opt
     velocity = track.velocity()
     speed = float(np.linalg.norm(velocity))
     distance_score = 1.0 - (distance / max_distance)
-    speed_score = min(1.0, speed / 18.0)
-    return 0.65 * distance_score + 0.35 * speed_score
+    speed_score = min(1.0, speed / 14.0)
+    return 0.72 * distance_score + 0.28 * speed_score
 
 
-def _track_quality(track: _Track, frame_width: int, frame_height: int) -> float:
+def _is_rear_view(camera_angle: str) -> bool:
+    return camera_angle in {"Rear View", "后方拍摄"}
+
+
+def _is_in_start_region(detection: Detection, frame_width: int, frame_height: int, start_region: str) -> bool:
+    x_ratio = detection.x / max(1.0, float(frame_width))
+    y_ratio = detection.y / max(1.0, float(frame_height))
+
+    if start_region in {"全画面", "Full frame"}:
+        return True
+    if start_region in {"左下区域", "Lower left"}:
+        return x_ratio <= 0.48 and y_ratio >= 0.42
+    if start_region in {"中下区域", "Lower center"}:
+        return 0.22 <= x_ratio <= 0.78 and y_ratio >= 0.42
+    if start_region in {"右下区域", "Lower right"}:
+        return x_ratio >= 0.52 and y_ratio >= 0.42
+    return y_ratio >= 0.42
+
+
+def _track_quality(
+    track: _Track,
+    frame_width: int,
+    frame_height: int,
+    camera_angle: str = "侧面拍摄",
+    start_region: str = "画面下半部（推荐）",
+) -> float:
     detections = track.detections
     if len(detections) < 2:
         return track.score
@@ -74,8 +99,33 @@ def _track_quality(track: _Track, frame_width: int, frame_height: int) -> float:
     displacement_score = min(1.0, displacement / (min_dimension * 0.18))
     length_score = min(1.0, len(detections) / 24.0)
     avg_score = float(np.mean([item.score for item in detections]))
+    avg_radius = float(np.mean([item.radius for item in detections]))
+    radius_std = float(np.std([item.radius for item in detections]))
+    avg_area = float(np.mean([item.area for item in detections]))
+    small_target_score = max(0.0, 1.0 - abs(avg_radius - 4.5) / 10.0)
+    size_stability_score = 1.0 / (1.0 + radius_std / max(1.0, avg_radius))
+    area_penalty = min(3.0, avg_area / 120.0)
 
-    return track.score + 8.0 * displacement_score + 5.0 * consistency + 4.0 * length_score + 2.0 * avg_score
+    start_region_score = 1.0 if _is_in_start_region(detections[0], frame_width, frame_height, start_region) else 0.0
+    vertical_travel = detections[0].y - detections[-1].y
+    upward_score = 0.5
+    if not _is_rear_view(camera_angle):
+        upward_score = max(0.0, min(1.0, (vertical_travel / max(1.0, min_dimension * 0.10)) * 0.5 + 0.5))
+    speed_score = min(1.0, speed_mean / 10.0)
+
+    return (
+        track.score
+        + 8.0 * displacement_score
+        + 5.5 * consistency
+        + 4.0 * length_score
+        + 3.0 * small_target_score
+        + 2.4 * size_stability_score
+        + 2.2 * speed_score
+        + 2.0 * avg_score
+        + 2.0 * start_region_score
+        + 1.5 * upward_score
+        - area_penalty
+    )
 
 
 def select_best_trajectory(
@@ -84,6 +134,8 @@ def select_best_trajectory(
     frame_height: int,
     min_points: int = 5,
     max_gap: int = 4,
+    camera_angle: str = "侧面拍摄",
+    start_region: str = "画面下半部（推荐）",
 ) -> List[Detection]:
     """Link per-frame detections into the most plausible moving ball trajectory."""
     min_dimension = max(1, min(frame_width, frame_height))
@@ -131,10 +183,17 @@ def select_best_trajectory(
                     completed_tracks.append(track)
 
         for detection in frame_candidates[:8]:
-            next_tracks.append(_Track(detections=[detection], score=detection.score))
+            if _is_in_start_region(detection, frame_width, frame_height, start_region):
+                next_tracks.append(_Track(detections=[detection], score=detection.score + 0.6))
 
         next_tracks.sort(
-            key=lambda track: _track_quality(track, frame_width=frame_width, frame_height=frame_height),
+            key=lambda track: _track_quality(
+                track,
+                frame_width=frame_width,
+                frame_height=frame_height,
+                camera_angle=camera_angle,
+                start_region=start_region,
+            ),
             reverse=True,
         )
         active_tracks = next_tracks[:80]
@@ -145,7 +204,13 @@ def select_best_trajectory(
         return []
 
     qualified.sort(
-        key=lambda track: _track_quality(track, frame_width=frame_width, frame_height=frame_height),
+        key=lambda track: _track_quality(
+            track,
+            frame_width=frame_width,
+            frame_height=frame_height,
+            camera_angle=camera_angle,
+            start_region=start_region,
+        ),
         reverse=True,
     )
     best = qualified[0]
@@ -155,5 +220,10 @@ def select_best_trajectory(
     displacement = float(np.linalg.norm(end - start))
     if displacement < max(18.0, min_dimension * 0.018):
         return []
+
+    if not _is_rear_view(camera_angle):
+        vertical_travel = best.detections[0].y - best.detections[-1].y
+        if vertical_travel < -min_dimension * 0.08:
+            return []
 
     return best.detections

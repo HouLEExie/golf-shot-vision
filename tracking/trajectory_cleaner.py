@@ -92,16 +92,25 @@ def compute_confidence(
 
     length_score = min(1.0, len(points) / 24.0)
     detection_score = float(np.mean([item.score for item in detections])) if detections else 0.0
+    avg_radius = float(np.mean([item.radius for item in detections])) if detections else 12.0
+    radius_std = float(np.std([item.radius for item in detections])) if detections else 4.0
+    avg_area = float(np.mean([item.area for item in detections])) if detections else 200.0
     consistency_score = 1.0 / (1.0 + speed_std / max(1.0, mean_speed))
     displacement_score = min(1.0, displacement / 240.0)
     duration_score = min(1.0, (points[-1].frame_index - points[0].frame_index + 1) / max(1, processed_frames * 0.12))
+    small_target_score = max(0.0, 1.0 - abs(avg_radius - 4.5) / 10.0)
+    size_stability_score = 1.0 / (1.0 + radius_std / max(1.0, avg_radius))
+    area_score = max(0.0, 1.0 - min(1.0, avg_area / 260.0))
     view_factor = 0.82 if camera_angle in {"Rear View", "后方拍摄"} else 1.0
 
     confidence = (
-        0.26 * length_score
-        + 0.26 * detection_score
-        + 0.22 * consistency_score
-        + 0.16 * displacement_score
-        + 0.10 * duration_score
+        0.20 * length_score
+        + 0.20 * detection_score
+        + 0.18 * consistency_score
+        + 0.14 * displacement_score
+        + 0.08 * duration_score
+        + 0.09 * small_target_score
+        + 0.07 * size_stability_score
+        + 0.04 * area_score
     )
     return round(max(0.0, min(0.98, confidence * view_factor)) * 100.0, 1)

@@ -46,7 +46,7 @@ def save_uploaded_file(uploaded_file, upload_dir: Path) -> Path:
 def get_video_metadata(video_path: Path) -> VideoMetadata:
     capture = cv2.VideoCapture(str(video_path))
     if not capture.isOpened():
-        raise VideoLoadError("OpenCV could not open this file. Try converting it to mp4.")
+        raise VideoLoadError("无法打开该视频文件。请尝试转换为 mp4 后重新上传。")
 
     fps = float(capture.get(cv2.CAP_PROP_FPS) or 0.0)
     frame_count = int(capture.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
@@ -73,7 +73,7 @@ def iter_video_frames(
 ) -> Iterable[Tuple[int, object]]:
     capture = cv2.VideoCapture(str(video_path))
     if not capture.isOpened():
-        raise VideoLoadError("OpenCV could not open this file. Try another video.")
+        raise VideoLoadError("无法打开该视频文件。请尝试更换视频。")
 
     frame_index = 0
     try:
