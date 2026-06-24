@@ -42,11 +42,11 @@ RECORDING_DIR = OUTPUT_ROOT / "recordings"
 
 
 TRAIL_COLORS = {
-    "Electric Blue": "#00D5FF",
-    "Neon Green": "#39FF88",
-    "Golden Yellow": "#FFD23F",
-    "Hot Red": "#FF3B30",
-    "White Glow": "#F8FBFF",
+    "电光蓝": "#00D5FF",
+    "荧光绿": "#39FF88",
+    "金黄色": "#FFD23F",
+    "亮红色": "#FF3B30",
+    "白色光晕": "#F8FBFF",
 }
 
 
@@ -76,8 +76,8 @@ def render_hero() -> None:
         <section class="hero-panel">
             <div class="hero-kicker">Golf Shot Vision</div>
             <h1>Golf Shot Vision</h1>
-            <h2>iPhone slow-motion golf shot tracer</h2>
-            <p>Upload or record your golf swing video, trace the ball flight, and estimate carry distance.</p>
+            <h2>iPhone 慢动作高尔夫球路追踪器</h2>
+            <p>上传 iPhone 慢动作视频，追踪球路轨迹，并估算起飞角、球速和飞行距离。</p>
         </section>
         """,
         unsafe_allow_html=True,
@@ -86,60 +86,60 @@ def render_hero() -> None:
 
 def sidebar_settings() -> tuple[Dict[str, object], Dict[str, object]]:
     with st.sidebar:
-        st.markdown("## Analysis Settings")
-        fps = st.number_input("FPS", min_value=24, max_value=1000, value=240, step=1)
+        st.markdown("## 分析参数")
+        fps = st.number_input("视频帧率（FPS）", min_value=24, max_value=1000, value=240, step=1)
         phone_distance_m = st.number_input(
-            "Phone to ball distance (m)",
+            "手机到球距离（米）",
             min_value=0.5,
             max_value=30.0,
             value=4.0,
             step=0.5,
         )
         reference_length_m = st.number_input(
-            "Reference object real length (m)",
+            "参考物真实长度（米）",
             min_value=0.05,
             max_value=20.0,
             value=1.0,
             step=0.05,
         )
         reference_pixels = st.number_input(
-            "Reference object pixel length (px)",
+            "参考物像素长度（px）",
             min_value=1,
             max_value=10000,
             value=300,
             step=10,
         )
         club_type = st.selectbox(
-            "Club type",
-            ["Driver", "Wood", "Hybrid", "Iron", "Wedge"],
+            "球杆类型",
+            ["一号木", "球道木", "混合杆", "铁杆", "挖起杆"],
             index=0,
         )
         camera_angle = st.selectbox(
-            "Camera angle",
-            ["Side View", "Rear View"],
+            "拍摄角度",
+            ["侧面拍摄", "后方拍摄"],
             index=0,
         )
 
         st.markdown("---")
-        st.markdown("## Trail Settings")
+        st.markdown("## 轨迹设置")
         color_choice = st.selectbox(
-            "Trail color",
+            "轨迹颜色",
             [
-                "Electric Blue",
-                "Neon Green",
-                "Golden Yellow",
-                "Hot Red",
-                "White Glow",
-                "Custom Color",
+                "电光蓝",
+                "荧光绿",
+                "金黄色",
+                "亮红色",
+                "白色光晕",
+                "自定义颜色",
             ],
             index=0,
         )
-        custom_color = st.color_picker("Custom Color", "#00D5FF")
-        trail_color = custom_color if color_choice == "Custom Color" else TRAIL_COLORS[color_choice]
-        line_thickness = st.slider("Trail line thickness", min_value=1, max_value=12, value=4)
-        glow_effect = st.toggle("Glow effect", value=True)
-        show_points = st.toggle("Show trajectory points", value=True)
-        show_markers = st.toggle("Show start and end markers", value=True)
+        custom_color = st.color_picker("自定义颜色", "#00D5FF")
+        trail_color = custom_color if color_choice == "自定义颜色" else TRAIL_COLORS[color_choice]
+        line_thickness = st.slider("轨迹粗细", min_value=1, max_value=12, value=4)
+        glow_effect = st.toggle("发光效果", value=True)
+        show_points = st.toggle("显示轨迹点", value=True)
+        show_markers = st.toggle("显示起点和终点", value=True)
 
     analysis_settings = {
         "fps": int(fps),
@@ -181,7 +181,7 @@ def scan_video_candidates(
 
         if max_frames and processed % 10 == 0:
             progress = min(0.62, (processed / max_frames) * 0.62)
-            progress_callback(progress, f"Scanning frame {processed} of {max_frames}")
+            progress_callback(progress, f"正在扫描第 {processed} / {max_frames} 帧")
 
     return candidate_frames, processed
 
@@ -206,8 +206,8 @@ def build_report(
         "product": "Golf Shot Vision",
         "estimated": True,
         "accuracy_notice": (
-            "Estimated values from 2D video and OpenCV rule-based detection. "
-            "This is not launch monitor accuracy."
+            "结果基于 2D 视频和 OpenCV 规则检测估算，适合训练反馈，"
+            "不等同于专业雷达设备数据。"
         ),
         "video_metadata": metadata,
         "analysis_settings": settings,
@@ -245,9 +245,9 @@ def analyze_video_file(
     else:
         max_frames = max(180, int(fps * 8))
 
-    progress_callback(0.04, "Opening video and preparing frame scan")
+    progress_callback(0.04, "正在打开视频并准备扫描帧")
     candidate_frames, processed_frames = scan_video_candidates(video_path, max_frames, progress_callback)
-    progress_callback(0.68, "Linking bright moving targets into a ball track")
+    progress_callback(0.68, "正在连接高亮运动目标并生成球路")
 
     raw_detections = select_best_trajectory(
         candidate_frames,
@@ -260,14 +260,14 @@ def analyze_video_file(
         return {
             "detected": False,
             "message": (
-                "No reliable golf ball flight was detected. Try an iPhone slow-motion side-view clip "
-                "with good light, a stable phone, and the ball visible against a clean background."
+                "没有检测到稳定的高尔夫球轨迹。请尝试上传光线更好、手机更稳定、"
+                "背景更干净的 iPhone 慢动作侧面拍摄视频。"
             ),
             "metadata": metadata,
             "processed_frames": processed_frames,
         }
 
-    progress_callback(0.74, "Smoothing trajectory")
+    progress_callback(0.74, "正在平滑轨迹")
     points = smooth_trajectory(raw_detections)
     pixel_to_meter = float(analysis_settings["reference_length_m"]) / max(
         1.0,
@@ -294,7 +294,7 @@ def analyze_video_file(
     plot_path = PLOT_DIR / f"gsv_trajectory_{job_id}.png"
     report_path = REPORT_DIR / f"gsv_report_{job_id}.json"
 
-    progress_callback(0.82, "Rendering trajectory overlay video")
+    progress_callback(0.82, "正在渲染轨迹视频")
     render_traced_video(
         input_path=video_path,
         output_path=overlay_path,
@@ -307,7 +307,7 @@ def analyze_video_file(
         max_frames=max_frames,
     )
 
-    progress_callback(0.94, "Saving trajectory plot and report")
+    progress_callback(0.94, "正在保存轨迹图和分析报告")
     save_trajectory_plot(points, plot_path, pixel_to_meter=pixel_to_meter)
 
     report = build_report(
@@ -323,7 +323,7 @@ def analyze_video_file(
         plot_path=plot_path,
     )
     report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
-    progress_callback(1.0, "Analysis complete")
+    progress_callback(1.0, "分析完成")
 
     return {
         "detected": True,
@@ -337,13 +337,13 @@ def analyze_video_file(
 
 def format_number(value: Optional[float], suffix: str, decimals: int = 1) -> str:
     if value is None or not math.isfinite(value):
-        return "Estimated N/A"
-    return f"Estimated {value:.{decimals}f}{suffix}"
+        return "暂无估算"
+    return f"约 {value:.{decimals}f}{suffix}"
 
 
 def display_results(result: Dict[str, object]) -> None:
     if not result.get("detected"):
-        st.warning(str(result.get("message", "No reliable ball flight was detected.")))
+        st.warning(str(result.get("message", "没有检测到稳定的球路轨迹。")))
         return
 
     report = result["report"]
@@ -355,30 +355,30 @@ def display_results(result: Dict[str, object]) -> None:
     carry_yd = metrics["carry_yd_estimated"]
     confidence = metrics["confidence_percent"]
 
-    st.markdown("### Estimated Results")
-    st.caption("Estimated from 2D video. Not professional launch monitor accuracy.")
+    st.markdown("### 分析结果")
+    st.caption("结果来自 2D 视频估算，不等同于专业雷达设备数据。")
     st.markdown(
         f"""
         <div class="metric-grid">
-            {metric_card("Launch Angle", format_number(launch_angle, " deg"), "Estimated takeoff angle")}
-            {metric_card("Estimated Ball Speed", format_number(speed_mph, " mph"), format_number(speed_mps, " m/s"))}
-            {metric_card("Estimated Carry", format_number(carry_m, " m"), format_number(carry_yd, " yd"))}
-            {metric_card("Confidence", f"{confidence:.0f}%" if confidence is not None else "N/A", "Rule-based track quality")}
+            {metric_card("起飞角", format_number(launch_angle, "°"), "估算出球角度")}
+            {metric_card("估算球速", format_number(speed_mph, " mph"), format_number(speed_mps, " m/s"))}
+            {metric_card("估算飞行距离", format_number(carry_m, " 米"), format_number(carry_yd, " 码"))}
+            {metric_card("识别置信度", f"{confidence:.0f}%" if confidence is not None else "暂无数据", "规则检测轨迹质量")}
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    st.markdown("### Video Output")
+    st.markdown("### 视频结果")
     left, right = st.columns(2)
     with left:
-        st.markdown("#### Original video")
+        st.markdown("#### 原视频")
         st.video(str(result["original_path"]))
     with right:
-        st.markdown("#### Traced video")
+        st.markdown("#### 轨迹视频")
         st.video(str(result["overlay_path"]))
 
-    st.markdown("### Trajectory Curve")
+    st.markdown("### 轨迹图表")
     st.image(str(result["plot_path"]), use_container_width=True)
 
     overlay_bytes = Path(str(result["overlay_path"])).read_bytes()
@@ -386,7 +386,7 @@ def display_results(result: Dict[str, object]) -> None:
     dl_left, dl_right = st.columns(2)
     with dl_left:
         st.download_button(
-            "Download traced video",
+            "下载轨迹视频",
             data=overlay_bytes,
             file_name=Path(str(result["overlay_path"])).name,
             mime="video/mp4",
@@ -394,7 +394,7 @@ def display_results(result: Dict[str, object]) -> None:
         )
     with dl_right:
         st.download_button(
-            "Download JSON analysis report",
+            "下载分析报告",
             data=report_bytes,
             file_name=Path(str(result["report_path"])).name,
             mime="application/json",
@@ -408,20 +408,20 @@ def run_analysis_ui(
     trail_settings: Dict[str, object],
     session_key: str,
 ) -> None:
-    progress_bar = st.progress(0.0, text="Starting analysis")
+    progress_bar = st.progress(0.0, text="正在开始分析")
 
     def update_progress(value: float, text: str) -> None:
         progress_bar.progress(min(1.0, max(0.0, value)), text=text)
 
     try:
-        with st.spinner("Analyzing ball flight..."):
+        with st.spinner("正在分析球路..."):
             result = analyze_video_file(video_path, analysis_settings, trail_settings, update_progress)
         st.session_state[session_key] = result
     except VideoLoadError as exc:
-        st.error(f"Could not open the video: {exc}")
+        st.error(f"无法打开视频：{exc}")
     except Exception as exc:
-        st.error("Analysis failed, but the app is still running. Please try another clip or adjust settings.")
-        with st.expander("Technical details"):
+        st.error("检测失败：分析过程中出现异常。请更换视频或调整参数后重试。")
+        with st.expander("技术详情"):
             st.code(str(exc))
     finally:
         progress_bar.empty()
@@ -431,26 +431,26 @@ def render_upload_tab(
     analysis_settings: Dict[str, object],
     trail_settings: Dict[str, object],
 ) -> None:
-    st.markdown('<div class="tab-intro">Recommended mode: upload an iPhone slow-motion clip.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="tab-intro">推荐模式：上传 iPhone 慢动作视频。</div>', unsafe_allow_html=True)
     uploaded_file = st.file_uploader(
-        "Upload iPhone slow-motion video",
+        "上传 iPhone 慢动作视频",
         type=["mp4", "mov", "m4v"],
         accept_multiple_files=False,
     )
 
     if uploaded_file is None:
-        st.info("Upload an mp4, mov, or m4v clip to begin.")
+        st.info("请上传 mp4、mov 或 m4v 视频开始分析。")
         return
 
     try:
         saved_path = save_uploaded_file(uploaded_file, UPLOAD_DIR)
         st.video(str(saved_path))
-        analyze_clicked = st.button("Analyze uploaded video", type="primary", use_container_width=True)
+        analyze_clicked = st.button("开始分析", type="primary", use_container_width=True)
         if analyze_clicked:
             run_analysis_ui(saved_path, analysis_settings, trail_settings, "upload_result")
     except Exception as exc:
-        st.error("The uploaded file could not be saved or previewed.")
-        with st.expander("Technical details"):
+        st.error("上传失败：无法保存或预览该视频文件。")
+        with st.expander("技术详情"):
             st.code(str(exc))
 
     if "upload_result" in st.session_state:
@@ -463,9 +463,9 @@ def render_record_tab(
 ) -> None:
     recorded_path = render_recorder_beta(st, RECORDING_DIR)
     if recorded_path:
-        st.markdown("### Recorded clip")
+        st.markdown("### 录制视频")
         st.video(str(recorded_path))
-        if st.button("Analyze recorded clip", type="primary", use_container_width=True):
+        if st.button("分析录制视频", type="primary", use_container_width=True):
             run_analysis_ui(Path(recorded_path), analysis_settings, trail_settings, "record_result")
 
     if "record_result" in st.session_state:
@@ -480,7 +480,7 @@ def main() -> None:
     render_hero()
     analysis_settings, trail_settings = sidebar_settings()
 
-    upload_tab, record_tab = st.tabs(["Upload Video", "Record Video Beta"])
+    upload_tab, record_tab = st.tabs(["上传视频", "实时录制 Beta"])
     with upload_tab:
         render_upload_tab(analysis_settings, trail_settings)
     with record_tab:

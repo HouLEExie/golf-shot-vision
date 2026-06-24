@@ -8,7 +8,7 @@ import numpy as np
 from tracking.trajectory_cleaner import TrajectoryPoint
 
 
-def estimate_launch_angle(points: List[TrajectoryPoint], camera_angle: str = "Side View") -> Optional[float]:
+def estimate_launch_angle(points: List[TrajectoryPoint], camera_angle: str = "侧面拍摄") -> Optional[float]:
     if len(points) < 3:
         return None
 
@@ -27,7 +27,7 @@ def estimate_launch_angle(points: List[TrajectoryPoint], camera_angle: str = "Si
         slope, _ = np.polyfit(x_values, y_up_values, 1)
         angle = math.degrees(math.atan(abs(float(slope))))
 
-    if camera_angle == "Rear View":
+    if camera_angle in {"Rear View", "后方拍摄"}:
         angle *= 0.82
 
     return round(max(-5.0, min(60.0, angle)), 1)

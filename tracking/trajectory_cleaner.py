@@ -95,7 +95,7 @@ def compute_confidence(
     consistency_score = 1.0 / (1.0 + speed_std / max(1.0, mean_speed))
     displacement_score = min(1.0, displacement / 240.0)
     duration_score = min(1.0, (points[-1].frame_index - points[0].frame_index + 1) / max(1, processed_frames * 0.12))
-    view_factor = 0.82 if camera_angle == "Rear View" else 1.0
+    view_factor = 0.82 if camera_angle in {"Rear View", "后方拍摄"} else 1.0
 
     confidence = (
         0.26 * length_score

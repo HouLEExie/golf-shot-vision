@@ -24,7 +24,7 @@ def _save_frames_to_mp4(frames: List[object], output_dir: Path, fps: int = 30) -
 
 def render_recorder_beta(st, output_dir: Path) -> Optional[Path]:
     st.markdown(
-        '<div class="tab-intro">Beta mode: browser camera support depends on browser, device, and HTTPS/local permissions.</div>',
+        '<div class="tab-intro">Beta 功能：浏览器摄像头支持取决于设备、浏览器，以及 HTTPS 或本地权限环境。</div>',
         unsafe_allow_html=True,
     )
 
@@ -33,8 +33,8 @@ def render_recorder_beta(st, output_dir: Path) -> Optional[Path]:
         from streamlit_webrtc import VideoProcessorBase, WebRtcMode, webrtc_streamer
     except Exception:
         st.warning(
-            "Record Video Beta is unavailable because streamlit-webrtc or av is not installed. "
-            "The Upload Video mode still works."
+            "实时录制 Beta 暂不可用：未安装 streamlit-webrtc 或 av。"
+            "上传视频模式仍然可以正常使用。"
         )
         st.code("pip install streamlit-webrtc av")
         return None
@@ -63,32 +63,32 @@ def render_recorder_beta(st, output_dir: Path) -> Optional[Path]:
         )
     except Exception as exc:
         st.warning(
-            "The browser camera could not be started. Use localhost, allow camera permission, "
-            "or switch to Upload Video."
+            "无法启动浏览器摄像头。请确认已允许摄像头权限，使用 HTTPS 或 localhost，"
+            "也可以切换到上传视频模式。"
         )
-        with st.expander("Technical details"):
+        with st.expander("技术详情"):
             st.code(str(exc))
         return None
 
     if not context.video_processor:
-        st.info("Start the camera stream above, then save the buffered clip when the swing is captured.")
+        st.info("请先启动上方摄像头画面，挥杆录制完成后再保存缓存视频。")
         return None
 
     processor = context.video_processor
     with processor.lock:
         frame_count = len(processor.frames)
-    st.caption(f"Buffered frames: {frame_count}. This Beta recorder stores the most recent frames in memory.")
+    st.caption(f"已缓存帧数：{frame_count}。Beta 录制会在内存中保存最近的视频帧。")
 
     saved_path = None
-    if st.button("Save buffered recording", use_container_width=True):
+    if st.button("保存缓存录制", use_container_width=True):
         with processor.lock:
             frames = list(processor.frames)
         if len(frames) < 10:
-            st.warning("Not enough frames captured yet. Keep the camera running a little longer.")
+            st.warning("已捕获帧数不足，请让摄像头继续运行一会儿。")
         else:
             saved_path = _save_frames_to_mp4(frames, output_dir=output_dir, fps=30)
             st.session_state["recorded_video_path"] = str(saved_path)
-            st.success("Recording saved. You can analyze it below.")
+            st.success("录制已保存，可以在下方开始分析。")
 
     if "recorded_video_path" in st.session_state:
         return Path(st.session_state["recorded_video_path"])

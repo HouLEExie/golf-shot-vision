@@ -25,21 +25,21 @@ def save_trajectory_plot(
         if pixel_to_meter:
             x = x * pixel_to_meter
             y = y * pixel_to_meter
-            x_label = "Horizontal displacement (m)"
-            y_label = "Vertical displacement (m)"
+            x_label = "水平位移（米）"
+            y_label = "垂直位移（米）"
         else:
-            x_label = "Horizontal displacement (px)"
-            y_label = "Vertical displacement (px)"
+            x_label = "水平位移（px）"
+            y_label = "垂直位移（px）"
 
         ax.plot(x, y, color="#00d5ff", linewidth=2.6)
         ax.scatter(x, y, color="#39ff88", s=18, zorder=3)
-        ax.scatter([x[0]], [y[0]], color="#ffd23f", s=58, zorder=4, label="Start")
-        ax.scatter([x[-1]], [y[-1]], color="#ff3b30", s=58, zorder=4, label="End")
+        ax.scatter([x[0]], [y[0]], color="#ffd23f", s=58, zorder=4, label="起点")
+        ax.scatter([x[-1]], [y[-1]], color="#ff3b30", s=58, zorder=4, label="终点")
     else:
-        x_label = "Horizontal displacement"
-        y_label = "Vertical displacement"
+        x_label = "水平位移"
+        y_label = "垂直位移"
 
-    ax.set_title("Estimated Ball Flight Trajectory", color="#f8fbff", fontsize=14, pad=12)
+    ax.set_title("估算球路轨迹", color="#f8fbff", fontsize=14, pad=12)
     ax.set_xlabel(x_label, color="#cfe8f7")
     ax.set_ylabel(y_label, color="#cfe8f7")
     ax.grid(color="#263648", alpha=0.58, linewidth=0.8)
