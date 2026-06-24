@@ -1,1 +1,11 @@
 
+__pycache__/
+.venv/
+outputs/
+sample_data/
+work/
+*.mp4
+*.mov
+*.m4v
+*.avi
+.streamlit/secrets.toml
