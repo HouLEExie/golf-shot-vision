@@ -82,20 +82,20 @@ def render_traced_video(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     capture = cv2.VideoCapture(str(input_path))
     if not capture.isOpened():
-        raise VideoLoadError("OpenCV could not reopen the input video for rendering.")
+        raise VideoLoadError("无法重新打开输入视频用于渲染。")
 
     fps = float(capture.get(cv2.CAP_PROP_FPS) or 30.0)
     width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
     height = int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
     if width <= 0 or height <= 0:
         capture.release()
-        raise VideoLoadError("The video has invalid dimensions.")
+        raise VideoLoadError("视频尺寸无效。")
 
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     writer = cv2.VideoWriter(str(output_path), fourcc, fps, (width, height))
     if not writer.isOpened():
         capture.release()
-        raise VideoLoadError("OpenCV could not create the traced output video.")
+        raise VideoLoadError("无法创建轨迹输出视频。")
 
     frame_index = 0
     try:
